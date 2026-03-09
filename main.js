@@ -30,7 +30,10 @@ class TerminalTetris {
         this.lines = 0;
         this.level = 0;
         this.highScore = parseInt(localStorage.getItem('tetris_high_score')) || 0;
+        this.playerName = localStorage.getItem('tetris_player_name') || "";
         this.state = 'START';
+        this.leaderboardData = null;
+        this.inputBuffer = "";
         this.currentPiece = null;
         this.nextPiece = null;
         this.showNext = true;
@@ -90,10 +93,11 @@ class TerminalTetris {
                         this.level = 0;
                         this.spawnPiece();
                         this.state = 'PLAYING';
-                    } else if (this.state === 'GAMEOVER') {
-                        location.reload();
+                    } else {
+                        // In other states, START button acts as Enter for convenience
+                        this.handleInput({ key: 'Enter' });
                     }
-                } else {
+                } else if (this.state === 'PLAYING') {
                     this.executeAction(act);
                 }
                 this.render();
@@ -128,8 +132,35 @@ class TerminalTetris {
             }
             return;
         }
+        if (this.state === 'INPUT_NAME') {
+            if (e.key === 'Enter' && this.inputBuffer.trim().length > 0) {
+                this.playerName = this.inputBuffer.trim();
+                localStorage.setItem('tetris_player_name', this.playerName);
+                this.submitScore();
+            } else if (e.key === 'Backspace') {
+                this.inputBuffer = this.inputBuffer.slice(0, -1);
+            } else if (e.key.length === 1 && this.inputBuffer.length < 12) {
+                this.inputBuffer += e.key.toUpperCase();
+            }
+            this.render();
+            return;
+        }
+
+        if (this.state === 'LEADERBOARD') {
+            if (e.key === 'Enter' || e.key === ' ') location.reload();
+            return;
+        }
+
         if (this.state === 'GAMEOVER') {
-            if (e.key === 'Enter') location.reload();
+            if (e.key === 'Enter') {
+                if (this.playerName) {
+                    this.submitScore();
+                } else {
+                    this.state = 'INPUT_NAME';
+                    this.inputBuffer = "";
+                }
+            }
+            this.render();
             return;
         }
 
@@ -269,6 +300,28 @@ class TerminalTetris {
         }
     }
 
+    async submitScore() {
+        this.state = 'LOADING';
+        this.render();
+        try {
+            const data = await window.Leaderboard.submitScore(this.playerName, String(this.score));
+            if (data && data.top3 && data.group) {
+                this.leaderboardData = data;
+                this.state = 'LEADERBOARD';
+            } else {
+                console.error("Leaderboard Error:", data);
+                this.state = 'GAMEOVER';
+                const errorMsg = data && data.message ? `Ошибка: ${data.message}` : "Неизвестная ошибка сервера";
+                const debugInfo = data && data.debug ? `\nОтладка: ${data.debug}` : "";
+                alert(`${errorMsg}${debugInfo}\nПроверьте настройки App Script.`);
+            }
+        } catch (e) {
+            console.error("Leaderboard Fetch Error:", e);
+            this.state = 'GAMEOVER';
+        }
+        this.render();
+    }
+
     write(text, x, y) {
         for (let i = 0; i < text.length; i++) {
             if (y >= 0 && y < HEIGHT && x + i >= 0 && x + i < WIDTH) this.buffer[y][x + i] = text[i];
@@ -350,15 +403,65 @@ class TerminalTetris {
             this.write("  " + "\\/".repeat(GAME_COLS) + "  ", ox, oy + 21);
 
             if (this.state === 'GAMEOVER') {
-                const msg = ["! ! ! ИГРА ОКОНЧЕНА ! ! !", " ", " НАЖМИТЕ ENTER ", " ДЛЯ РЕСТАРТА "];
+                const msg = ["! ! ! ИГРА ОКОНЧЕНА ! ! !", " ", this.playerName ? " НАЖМИТЕ ENTER ДЛЯ " : " НАЖМИТЕ ENTER ЧТОБЫ ", this.playerName ? " ОТПРАВКИ РЕКОРДА " : " ВВЕСТИ СВОЕ ИМЯ "];
                 msg.forEach((text, i) => {
                     const y = 10 + i;
                     const x = Math.floor((WIDTH - text.length) / 2);
                     this.write(text, x, y);
                 });
             }
+
+            if (this.state === 'INPUT_NAME') {
+                this.write("! ! ! НОВЫЙ РЕКОРД ! ! !", 28, 10);
+                this.write("ВВЕДИТЕ ВАШЕ ИМЯ:", 31, 12);
+                this.write(`> ${this.inputBuffer}_`, 34, 14);
+                this.write("НАЖМИТЕ ENTER ДЛЯ СОХРАНЕНИЯ", 26, 16);
+            }
+
+            if (this.state === 'LOADING') {
+                this.write("ОТПРАВКА ДАННЫХ...", 31, 12);
+            }
+
+            if (this.state === 'LEADERBOARD') {
+                const drawTable = (data, startY, label) => {
+                    const header = `== ${label} ==`;
+                    this.write(header, Math.floor((WIDTH - header.length) / 2), startY);
+                    this.write("-----------------------------", 25, startY + 1);
+                    this.write(" МЕСТО   ИМЯ          ОЧКИ   ", 25, startY + 2);
+                    this.write("-----------------------------", 25, startY + 3);
+                    
+                    data.forEach((r, i) => {
+                        const rank = String(r.rank).padStart(2, '0');
+                        const name = r.name.toUpperCase().padEnd(12, ' ');
+                        const score = String(r.score).padStart(6, '0');
+                        const isCurrent = r.isCurrent;
+                        
+                        let line = `  ${rank}.    ${name}  ${score}  `;
+                        if (isCurrent) {
+                            line = `> ${rank}.    ${name}  ${score} <`;
+                        }
+                        this.write(line, 25, startY + 4 + i);
+                    });
+                    return startY + 4 + data.length + 1;
+                };
+
+                if (this.leaderboardData) {
+                    let nextY = drawTable(this.leaderboardData.top3, 2, "ТОП РЕКОРДОВ");
+                    drawTable(this.leaderboardData.group, nextY + 1, "ВАША ПОЗИЦИЯ");
+                }
+                
+                const restartMsg = "--- НАЖМИТЕ ENTER ДЛЯ РЕСТАРТА ---";
+                this.write(restartMsg, Math.floor((WIDTH - restartMsg.length) / 2), 23);
+            }
         }
         this.terminal.textContent = this.buffer.map(row => row.join('')).join('\n');
+        
+        // Pulse START button when input is needed
+        const btnStart = document.getElementById('btn-start');
+        if (btnStart) {
+            const shouldPulse = ['START', 'GAMEOVER', 'LEADERBOARD', 'INPUT_NAME'].includes(this.state);
+            btnStart.classList.toggle('pulse-btn', shouldPulse);
+        }
     }
 }
 new TerminalTetris();
