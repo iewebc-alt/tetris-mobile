@@ -70,7 +70,11 @@ class TerminalTetris {
             });
         }
         this.centerBoardOnMobile();
-        window.addEventListener('resize', () => this.centerBoardOnMobile());
+        window.addEventListener('resize', () => {
+            this.centerBoardOnMobile();
+            // Повторный вызов для надежности при смене ориентации или открытии клавиатуры
+            setTimeout(() => this.centerBoardOnMobile(), 500);
+        });
         this.resetTimer();
     }
 
@@ -182,7 +186,10 @@ class TerminalTetris {
                     const hiddenInput = document.getElementById('name-input');
                     if (hiddenInput) {
                         hiddenInput.value = "";
-                        hiddenInput.focus();
+                        // Используем preventScroll, чтобы избежать резкого скачка экрана
+                        hiddenInput.focus({ preventScroll: true });
+                        // Дополнительное центрирование через небольшую задержку (для учета анимации клавиатуры)
+                        setTimeout(() => this.centerBoardOnMobile(), 300);
                     }
                 }
             }
