@@ -23,7 +23,12 @@ class Leaderboard {
         try {
             const response = await fetch(API_URL, {
                 method: "POST",
-                body: JSON.stringify(payload)
+                mode: "cors", // Explicitly enable CORS
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8", // Bypasses preflight (OPTIONS) request
+                },
+                body: JSON.stringify(payload),
+                redirect: "follow" // Essential for Google Apps Script
             });
             return await response.json();
         } catch (e) {
