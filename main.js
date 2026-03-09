@@ -52,6 +52,23 @@ class TerminalTetris {
         this.render();
         document.addEventListener('keydown', (e) => this.handleInput(e));
         this.bindTouchControls();
+        this.resetTimer();
+        this.render();
+
+        const hiddenInput = document.getElementById('name-input');
+        if (hiddenInput) {
+            hiddenInput.addEventListener('input', (e) => {
+                if (this.state === 'INPUT_NAME') {
+                    this.inputBuffer = e.target.value.toUpperCase().slice(0, 12);
+                    this.render();
+                }
+            });
+            hiddenInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.handleInput({ key: 'Enter' });
+                }
+            });
+        }
         this.centerBoardOnMobile();
         window.addEventListener('resize', () => this.centerBoardOnMobile());
         this.resetTimer();
@@ -133,14 +150,18 @@ class TerminalTetris {
             return;
         }
         if (this.state === 'INPUT_NAME') {
+            const hiddenInput = document.getElementById('name-input');
             if (e.key === 'Enter' && this.inputBuffer.trim().length > 0) {
                 this.playerName = this.inputBuffer.trim();
                 localStorage.setItem('tetris_player_name', this.playerName);
+                if (hiddenInput) hiddenInput.blur();
                 this.submitScore();
             } else if (e.key === 'Backspace') {
                 this.inputBuffer = this.inputBuffer.slice(0, -1);
+                if (hiddenInput) hiddenInput.value = this.inputBuffer;
             } else if (e.key.length === 1 && this.inputBuffer.length < 12) {
                 this.inputBuffer += e.key.toUpperCase();
+                if (hiddenInput) hiddenInput.value = this.inputBuffer;
             }
             this.render();
             return;
@@ -158,6 +179,11 @@ class TerminalTetris {
                 } else {
                     this.state = 'INPUT_NAME';
                     this.inputBuffer = "";
+                    const hiddenInput = document.getElementById('name-input');
+                    if (hiddenInput) {
+                        hiddenInput.value = "";
+                        hiddenInput.focus();
+                    }
                 }
             }
             this.render();
