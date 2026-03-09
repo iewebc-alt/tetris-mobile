@@ -164,11 +164,11 @@ class TerminalTetris {
             } else if (e.key === 'Backspace') {
                 this.inputBuffer = this.inputBuffer.slice(0, -1);
                 if (hiddenInput) hiddenInput.value = this.inputBuffer;
-            } else if (e.key.length === 1 && this.inputBuffer.length < 12) {
-                this.inputBuffer += e.key.toUpperCase();
-                if (hiddenInput) hiddenInput.value = this.inputBuffer;
             }
+            // Обычные символы (буквы) игнорируем здесь, 
+            // так как они приходят через событие 'input' на мобильных
             this.render();
+            // Сразу возвращаем экран в центр
             this.centerBoardOnMobile();
             return;
         }
