@@ -61,6 +61,7 @@ class TerminalTetris {
                 if (this.state === 'INPUT_NAME') {
                     this.inputBuffer = e.target.value.toUpperCase().slice(0, 12);
                     this.render();
+                    this.centerBoardOnMobile();
                 }
             });
             hiddenInput.addEventListener('keydown', (e) => {
@@ -168,6 +169,7 @@ class TerminalTetris {
                 if (hiddenInput) hiddenInput.value = this.inputBuffer;
             }
             this.render();
+            this.centerBoardOnMobile();
             return;
         }
 
