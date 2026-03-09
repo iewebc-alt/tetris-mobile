@@ -43,6 +43,8 @@ class TerminalTetris {
         this.terminal = document.getElementById('terminal');
         this.buffer = Array(HEIGHT).fill().map(() => Array(WIDTH).fill(' '));
         this.dropTimer = null;
+        this.cursorVisible = true;
+        this.cursorTimer = null;
 
         this.init();
     }
@@ -160,6 +162,7 @@ class TerminalTetris {
                 this.playerName = this.inputBuffer.trim();
                 localStorage.setItem('tetris_player_name', this.playerName);
                 if (hiddenInput) hiddenInput.blur();
+                this.stopCursorBlink();
                 this.submitScore();
             } else if (e.key === 'Backspace') {
                 this.inputBuffer = this.inputBuffer.slice(0, -1);
@@ -185,6 +188,7 @@ class TerminalTetris {
                 } else {
                     this.state = 'INPUT_NAME';
                     this.inputBuffer = "";
+                    this.startCursorBlink();
                     const hiddenInput = document.getElementById('name-input');
                     if (hiddenInput) {
                         hiddenInput.value = "";
@@ -449,8 +453,11 @@ class TerminalTetris {
             if (this.state === 'INPUT_NAME') {
                 this.write("! ! ! НОВЫЙ РЕКОРД ! ! !", 28, 5);
                 this.write("ВВЕДИТЕ ВАШЕ ИМЯ:", 31, 7);
-                this.write(`> ${this.inputBuffer}_`, 34, 9);
+                const cursor = this.cursorVisible ? "_" : " ";
+                this.write(`> ${this.inputBuffer}${cursor}`, 34, 9);
                 this.write("НАЖМИТЕ ENTER ДЛЯ СОХРАНЕНИЯ", 26, 11);
+                // Принудительное центрирование в режиме ввода
+                this.centerBoardOnMobile();
             }
 
             if (this.state === 'LOADING') {
@@ -497,6 +504,24 @@ class TerminalTetris {
             const shouldPulse = ['START', 'GAMEOVER', 'LEADERBOARD', 'INPUT_NAME'].includes(this.state);
             btnStart.classList.toggle('pulse-btn', shouldPulse);
         }
+    }
+
+    startCursorBlink() {
+        this.stopCursorBlink();
+        this.cursorTimer = setInterval(() => {
+            if (this.state === 'INPUT_NAME') {
+                this.cursorVisible = !this.cursorVisible;
+                this.render();
+            } else {
+                this.stopCursorBlink();
+            }
+        }, 500);
+    }
+
+    stopCursorBlink() {
+        if (this.cursorTimer) clearInterval(this.cursorTimer);
+        this.cursorTimer = null;
+        this.cursorVisible = true;
     }
 }
 new TerminalTetris();
