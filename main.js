@@ -440,21 +440,21 @@ class TerminalTetris {
             if (this.state === 'GAMEOVER') {
                 const msg = ["! ! ! ИГРА ОКОНЧЕНА ! ! !", " ", this.playerName ? " НАЖМИТЕ ENTER ДЛЯ " : " НАЖМИТЕ ENTER ЧТОБЫ ", this.playerName ? " ОТПРАВКИ РЕКОРДА " : " ВВЕСТИ СВОЕ ИМЯ "];
                 msg.forEach((text, i) => {
-                    const y = 10 + i;
+                    const y = 5 + i;
                     const x = Math.floor((WIDTH - text.length) / 2);
                     this.write(text, x, y);
                 });
             }
 
             if (this.state === 'INPUT_NAME') {
-                this.write("! ! ! НОВЫЙ РЕКОРД ! ! !", 28, 10);
-                this.write("ВВЕДИТЕ ВАШЕ ИМЯ:", 31, 12);
-                this.write(`> ${this.inputBuffer}_`, 34, 14);
-                this.write("НАЖМИТЕ ENTER ДЛЯ СОХРАНЕНИЯ", 26, 16);
+                this.write("! ! ! НОВЫЙ РЕКОРД ! ! !", 28, 5);
+                this.write("ВВЕДИТЕ ВАШЕ ИМЯ:", 31, 7);
+                this.write(`> ${this.inputBuffer}_`, 34, 9);
+                this.write("НАЖМИТЕ ENTER ДЛЯ СОХРАНЕНИЯ", 26, 11);
             }
 
             if (this.state === 'LOADING') {
-                this.write("ОТПРАВКА ДАННЫХ...", 31, 12);
+                this.write("ОТПРАВКА ДАННЫХ...", 31, 7);
             }
 
             if (this.state === 'LEADERBOARD') {
