@@ -103,7 +103,8 @@ class TerminalTetris {
             'btn-rot': 'ROT',
             'btn-soft': 'SOFT',
             'btn-hard': 'HARD',
-            'btn-start': 'START'
+            'btn-start': 'START',
+            'btn-kbd': 'KBD'
         };
 
         Object.entries(controls).forEach(([id, act]) => {
@@ -120,6 +121,12 @@ class TerminalTetris {
                     } else {
                         // In other states, START button acts as Enter for convenience
                         this.handleInput({ key: 'Enter' });
+                    }
+                } else if (act === 'KBD') {
+                    const hiddenInput = document.getElementById('name-input');
+                    if (hiddenInput) {
+                        hiddenInput.focus({ preventScroll: true });
+                        setTimeout(() => this.centerBoardOnMobile(), 300);
                     }
                 } else if (this.state === 'PLAYING') {
                     this.executeAction(act);
@@ -503,6 +510,11 @@ class TerminalTetris {
         if (btnStart) {
             const shouldPulse = ['START', 'GAMEOVER', 'LEADERBOARD', 'INPUT_NAME'].includes(this.state);
             btnStart.classList.toggle('pulse-btn', shouldPulse);
+        }
+
+        const btnKbd = document.getElementById('btn-kbd');
+        if (btnKbd) {
+            btnKbd.style.display = (this.state === 'INPUT_NAME') ? 'flex' : 'none';
         }
     }
 
