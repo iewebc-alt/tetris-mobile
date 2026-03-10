@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbzQhBmaQyYQRhF92nqg_Cq1Ksn9M8d4RDV-Y3CujAkctuh_AwyYhqAu6mjyCRswE331/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwc9moKwF4SbZ6YLGYyEzRxCN9CMpVFZjDFp_gb_wr3NBvlN24XyG9vnAQgx7hy1tA/exec";
 const SECRET_SALT = "0987654321";
 
 class Leaderboard {
@@ -25,7 +25,7 @@ class Leaderboard {
                 method: "POST",
                 mode: "cors", // Explicitly enable CORS
                 headers: {
-                    "Content-Type": "text/plain;charset=utf-8", // Bypasses preflight (OPTIONS) request
+                    "Content-Type": "text/plain", // Минимальный заголовок для обхода CORS Preflight
                 },
                 body: JSON.stringify(payload),
                 redirect: "follow" // Essential for Google Apps Script
